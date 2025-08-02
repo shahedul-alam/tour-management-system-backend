@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import app from "./app";
 import { Server } from "http";
 import { envVars } from "./app/config/env";
+import { seedSuperAdmin } from "./app/utils/seedSuperAdmin";
 
 dotenv.config();
 let server: Server;
@@ -23,7 +24,10 @@ const startServer = async () => {
   }
 };
 
-startServer();
+(async () => {
+  await startServer();
+  await seedSuperAdmin();
+})();
 
 /* The `process.on("SIGTERM", ...)` block in the provided TypeScript code is handling the SIGTERM
 signal. When a SIGTERM signal is received, it indicates a request for the process to terminate
