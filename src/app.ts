@@ -3,11 +3,13 @@ import cors from "cors";
 import { router } from "./app/routes";
 import { globalErrorHandler } from "./app/middlewares/globalErrorHandler";
 import { routeNotFoundHandler } from "./app/middlewares/notFoundHandler";
+import cookieParser from "cookie-parser";
 
 // creating an app using express
 const app: Application = express();
 
 // middlewares
+app.use(cookieParser());
 app.use(express.json());
 app.use(cors());
 

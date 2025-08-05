@@ -24,7 +24,7 @@ export const checkAuth =
         throw new AppError(httpStatus.FORBIDDEN, "Forbidden access");
       }
 
-      // req.user = verifiedToken;
+      req.user = verifiedToken;
 
       next();
     } catch (error) {

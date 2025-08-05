@@ -1,10 +1,50 @@
 import bcryptjs from "bcryptjs";
 import httpStatus from "http-status-codes";
 import AppError from "../../errorHelpers/appError";
-import { IUser } from "../user/user.interface";
+import { IsActive, IUser } from "../user/user.interface";
 import { User } from "../user/user.model";
-import { generateToken } from "../../utils/jwt";
+import {
+  createNewAccessTokenWithRefreshToken,
+  createUserTokens,
+} from "../../utils/userTokens";
+import { verifyToken } from "../../utils/jwt";
 import { envVars } from "../../config/env";
+import { JwtPayload } from "jsonwebtoken";
+
+const getNewAccessToken = async (refreshToken: string) => {
+  const verifiedRefreshToken = verifyToken(
+    refreshToken,
+    envVars.JWT_REFRESH_SECRET
+  ) as JwtPayload;
+
+  const isUserEXists = await User.findOne({
+    email: verifiedRefreshToken.email,
+  });
+
+  if (!isUserEXists) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User does not exist");
+  }
+
+  if (
+    isUserEXists.isActive === IsActive.BLOCKED ||
+    isUserEXists.isActive === IsActive.INACTIVE
+  ) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `User is ${isUserEXists.isActive}`
+    );
+  }
+
+  if (isUserEXists.isDeleted) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User is deleted");
+  }
+
+  const newAccessToken = createNewAccessTokenWithRefreshToken(isUserEXists);
+
+  return {
+    accessToken: newAccessToken,
+  };
+};
 
 const credentialsLogin = async (payload: Partial<IUser>) => {
   const { email, password } = payload;
@@ -24,23 +64,18 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
     throw new AppError(httpStatus.BAD_REQUEST, "Incorrect password");
   }
 
-  const jwtPayload = {
-    userId: isUserEXists._id,
-    email: isUserEXists.email,
-    role: isUserEXists.role,
-  };
+  const userTokens = createUserTokens(isUserEXists);
 
-  const accessToken = generateToken(
-    jwtPayload,
-    envVars.JWT_ACCESS_SECRET,
-    envVars.JWT_ACCESS_EXPIRES
-  );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { password: pass, ...rest } = isUserEXists.toObject();
 
   return {
-    accessToken,
+    ...userTokens,
+    user: rest,
   };
 };
 
 export const authServices = {
   credentialsLogin,
+  getNewAccessToken,
 };
