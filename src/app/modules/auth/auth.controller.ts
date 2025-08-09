@@ -40,8 +40,32 @@ const getNewAccessToken = catchAsync(
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.CREATED,
-      message: "New access token generated successfully",
+      message: "New access token retrieved successfully",
       data: tokenInfo,
+    });
+  }
+);
+
+const logout = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+    });
+
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.CREATED,
+      message: "User logged out successfully",
+      data: null,
     });
   }
 );
@@ -49,4 +73,5 @@ const getNewAccessToken = catchAsync(
 export const authControllers = {
   credentialsLogin,
   getNewAccessToken,
+  logout,
 };
