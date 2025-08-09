@@ -15,7 +15,7 @@ const credentialsLogin = catchAsync(
 
     sendResponse(res, {
       success: true,
-      statusCode: httpStatus.CREATED,
+      statusCode: httpStatus.OK,
       message: "User logged in successfully",
       data: loginInfo,
     });
@@ -60,11 +60,27 @@ const logout = catchAsync(
       sameSite: "lax",
     });
 
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "User logged out successfully",
+      data: null,
+    });
+  }
+);
+
+const resetPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const newPassword = req.body.newPassword;
+    const oldPassword = req.body.oldPassword;
+    const decodedToken = req.user;
+
+    await authServices.resetPassword(oldPassword, newPassword, decodedToken);
 
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.CREATED,
-      message: "User logged out successfully",
+      message: "Password changed successfully",
       data: null,
     });
   }
@@ -74,4 +90,5 @@ export const authControllers = {
   credentialsLogin,
   getNewAccessToken,
   logout,
+  resetPassword,
 };
