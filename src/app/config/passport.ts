@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import bcryptjs from "bcryptjs";
 import passport, { Profile } from "passport";
 import {
   Strategy as googleStrategy,
@@ -7,6 +8,7 @@ import {
 import { envVars } from "./env";
 import { User } from "../modules/user/user.model";
 import { Role } from "../modules/user/user.interface";
+import { Strategy as LocalStrategy } from "passport-local";
 
 passport.use(
   new googleStrategy(
@@ -49,6 +51,45 @@ passport.use(
         return done(null, user);
       } catch (error) {
         console.log("Google strategy error", error);
+        return done(error);
+      }
+    }
+  )
+);
+
+passport.use(
+  new LocalStrategy(
+    { usernameField: "email", passwordField: "password" },
+    async (email: string, password: string, done) => {
+      try {
+        const isUserEXists = await User.findOne({ email });
+
+        if (!isUserEXists) {
+          return done("User does not exist");
+        }
+
+        const isGoogleAuthenticated = isUserEXists.auths.some(
+          (providerObject) => providerObject.provider == "google"
+        );
+
+        if (isGoogleAuthenticated && !isUserEXists.password) {
+          return done(
+            "You have authenticated through Google login. If you want to login using credentials, then at first login with Google and set password using your email and then you can login with email and password."
+          );
+        }
+
+        const isPasswordMatched = await bcryptjs.compare(
+          password as string,
+          isUserEXists.password as string
+        );
+
+        if (!isPasswordMatched) {
+          return done("Incorrect password");
+        }
+
+        return done(null, isUserEXists);
+      } catch (error) {
+        console.log("Local strategy error", error);
         return done(error);
       }
     }
