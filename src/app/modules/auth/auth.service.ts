@@ -79,6 +79,10 @@ const resetPassword = async (
 ) => {
   const user = await User.findById(decodedToken.userId);
 
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
   const isOldPasswordMatched = await bcryptjs.compare(
     oldPassword,
     user?.password as string
