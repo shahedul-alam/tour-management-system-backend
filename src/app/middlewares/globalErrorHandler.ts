@@ -9,8 +9,9 @@ import { handleCastError } from "../errorHelpers/handleCastError";
 import { handleValidationError } from "../errorHelpers/handleValidationError";
 import { handleZodError } from "../errorHelpers/handleZodError";
 import { TErrorSources } from "../interfaces/error.types";
+import { deleteImageFromCloudinary } from "../config/cloudinary.config";
 
-export const globalErrorHandler = (
+export const globalErrorHandler = async (
   err: any,
   req: Request,
   res: Response,
@@ -19,6 +20,17 @@ export const globalErrorHandler = (
   let statusCode = 500;
   let message = "Internal Server Error";
   let errorSources: TErrorSources[] = [];
+
+  if (req.file) {
+    await deleteImageFromCloudinary(req.file.path);
+  }
+  if (req.files && req.files.length && Array.isArray(req.files)) {
+    const imageUrls = (req.files as Express.Multer.File[]).map(
+      (file) => file.path
+    );
+
+    await Promise.all(imageUrls.map((url) => deleteImageFromCloudinary(url)));
+  }
 
   if (err.code === 11000) {
     const simplifiedError = handleDuplicateError(err);
