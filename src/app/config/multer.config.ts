@@ -11,6 +11,7 @@ const storage = new CloudinaryStorage({
         .toLowerCase()
         .replace(/\s+/g, "-") 
         .replace(/\./g, "-")
+        // eslint-disable-next-line no-useless-escape
         .replace(/[^a-z0-9\-\.]/g, ""); 
 
       const extension = file.originalname.split(".").pop();
