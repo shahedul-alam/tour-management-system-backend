@@ -10,10 +10,7 @@ import { Tour } from "../tour/tour.model";
 import mongoose from "mongoose";
 import { SSLService } from "../sslCommerz/sslCommerz.service";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
-
-const generateTransactionId = () => {
-  return `tran_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-};
+import { generateTransactionId } from "../../utils/generateTransactionId";
 
 const createBooking = async (payload: Partial<IBooking>, userId: string) => {
   const session = await mongoose.startSession();
@@ -96,10 +93,26 @@ const createBooking = async (payload: Partial<IBooking>, userId: string) => {
   }
 };
 
+const getUserBookings = async () => {
+  return {};
+};
+
+const getBookingById = async () => {
+  return {};
+};
+
+const updateBookingStatus = async () => {
+  return {};
+};
+
+const getAllBookings = async () => {
+  return {};
+};
+
 export const BookingService = {
   createBooking,
-  // getUserBookings,
-  // getBookingById,
-  // updateBookingStatus,
-  // getAllBookings,
+  getUserBookings,
+  getBookingById,
+  updateBookingStatus,
+  getAllBookings,
 };

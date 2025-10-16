@@ -7,7 +7,7 @@ import {
 } from "passport-google-oauth20";
 import { envVars } from "./env";
 import { User } from "../modules/user/user.model";
-import { Role } from "../modules/user/user.interface";
+import { IsActive, Role } from "../modules/user/user.interface";
 import { Strategy as LocalStrategy } from "passport-local";
 
 passport.use(
@@ -31,6 +31,22 @@ passport.use(
         }
 
         let user = await User.findOne({ email });
+
+        if (user && !user.isVerified) {
+          return done(null, false, { message: "User is not verified" });
+        }
+
+        if (
+          user &&
+          (user.isActive === IsActive.BLOCKED ||
+            user.isActive === IsActive.INACTIVE)
+        ) {
+          done(`User is ${user.isActive}`);
+        }
+
+        if (user && user.isDeleted) {
+          return done(null, false, { message: "User is deleted" });
+        }
 
         if (!user) {
           user = await User.create({
@@ -68,6 +84,23 @@ passport.use(
           return done("User does not exist");
         }
 
+        if (!isUserEXists.isVerified) {
+          // throw new AppError(httpStatus.BAD_REQUEST, "User is not verified")
+          return done("User is not verified");
+        }
+
+        if (
+          isUserEXists.isActive === IsActive.BLOCKED ||
+          isUserEXists.isActive === IsActive.INACTIVE
+        ) {
+          // throw new AppError(httpStatus.BAD_REQUEST, `User is ${isUserExist.isActive}`)
+          return done(`User is ${isUserEXists.isActive}`);
+        }
+        if (isUserEXists.isDeleted) {
+          // throw new AppError(httpStatus.BAD_REQUEST, "User is deleted")
+          return done("User is deleted");
+        }
+
         const isGoogleAuthenticated = isUserEXists.auths.some(
           (providerObject) => providerObject.provider == "google"
         );
@@ -81,7 +114,7 @@ passport.use(
         const isPasswordMatched = await bcryptjs.compare(
           password as string,
           isUserEXists.password as string
-        );
+        ); 
 
         if (!isPasswordMatched) {
           return done("Incorrect password");

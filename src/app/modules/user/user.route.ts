@@ -12,6 +12,13 @@ userRoutes.post(
   validateRequest(createUserZodSchema),
   userControllers.createUser
 );
+userRoutes.get("/me", checkAuth(...Object.values(Role)), userControllers.getMe);
+
+userRoutes.get(
+  "/:id",
+  checkAuth(...Object.values(Role)),
+  userControllers.getSingleUser
+);
 
 userRoutes.patch(
   "/:id",
