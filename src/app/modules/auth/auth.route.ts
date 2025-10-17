@@ -16,14 +16,18 @@ authRoutes.post(
   authControllers.changePassword
 );
 authRoutes.post(
-  "/reset-password",
-  checkAuth(...Object.values(Role)),
-  authControllers.resetPassword
-);
-authRoutes.post(
   "/set-password",
   checkAuth(...Object.values(Role)),
   authControllers.setPassword
+);
+authRoutes.post(
+  "/forgot-password",
+  authControllers.forgotPassword
+);
+authRoutes.post(
+  "/reset-password",
+  checkAuth(...Object.values(Role)),
+  authControllers.resetPassword
 );
 authRoutes.get(
   "/google",
