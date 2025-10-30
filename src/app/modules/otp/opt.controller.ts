@@ -5,7 +5,7 @@ import { OTPService } from "./opt.service";
 
 const sendOTP = catchAsync(async (req: Request, res: Response) => {
   const { email, name } = req.body;
-  
+
   await OTPService.sendOTP(email, name);
 
   sendResponse(res, {
@@ -17,6 +17,10 @@ const sendOTP = catchAsync(async (req: Request, res: Response) => {
 });
 
 const verifyOTP = catchAsync(async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+
+  await OTPService.verifyOTP(email, otp);
+
   sendResponse(res, {
     statusCode: 200,
     success: true,
