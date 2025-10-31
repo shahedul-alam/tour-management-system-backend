@@ -12,6 +12,7 @@ import { generatePdf, IInvoiceData } from "../../utils/invoice";
 import { ITour } from "../tour/tour.interface";
 import { IUser } from "../user/user.interface";
 import { sendEmail } from "../../utils/sendEmail";
+import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
 
 const initPayment = async (bookingId: string) => {
   const payment = await Payment.findOne({ booking: bookingId });
@@ -83,6 +84,19 @@ const successPayment = async (query: Record<string, string>) => {
       };
 
       const pdfBuffer = await generatePdf(invoiceData);
+
+      const cloudinaryResult = await uploadBufferToCloudinary(
+        pdfBuffer,
+        "invoice"
+      );
+
+      await Payment.findByIdAndUpdate(
+        updatedPayment._id,
+        {
+          invoiceUrl: cloudinaryResult?.secure_url,
+        },
+        { runValidators: true, session }
+      );
 
       await sendEmail({
         to: (updatedBooking?.user as unknown as IUser).email,
