@@ -29,6 +29,7 @@ interface EnvConfig {
     SSL_SUCCESS_FRONTEND_URL: string;
     SSL_FAIL_FRONTEND_URL: string;
     SSL_CANCEL_FRONTEND_URL: string;
+    SSL_IPN_URL: string;
   };
   CLOUDINARY: {
     CLOUDINARY_CLOUD_NAME: string;
@@ -75,6 +76,7 @@ const loadEnvVariables = (): EnvConfig => {
     "SSL_SUCCESS_FRONTEND_URL",
     "SSL_FAIL_FRONTEND_URL",
     "SSL_CANCEL_FRONTEND_URL",
+    "SSL_IPN_URL",
     "CLOUDINARY_CLOUD_NAME",
     "CLOUDINARY_API_KEY",
     "CLOUDINARY_API_SECRET",
@@ -122,6 +124,7 @@ const loadEnvVariables = (): EnvConfig => {
       SSL_SUCCESS_FRONTEND_URL: process.env.SSL_SUCCESS_FRONTEND_URL as string,
       SSL_FAIL_FRONTEND_URL: process.env.SSL_FAIL_FRONTEND_URL as string,
       SSL_CANCEL_FRONTEND_URL: process.env.SSL_CANCEL_FRONTEND_URL as string,
+      SSL_IPN_URL: process.env.SSL_IPN_URL as string,
     },
     CLOUDINARY: {
       CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME as string,
