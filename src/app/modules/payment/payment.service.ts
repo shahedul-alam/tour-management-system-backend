@@ -68,7 +68,7 @@ const successPayment = async (query: Record<string, string>) => {
         { new: true, runValidators: true, session }
       )
         .populate("tour", "title")
-        .populate("user", "name");
+        .populate("user", "name email");
 
       if (!updatedBooking) {
         throw new AppError(401, "Booking not found");
@@ -89,6 +89,10 @@ const successPayment = async (query: Record<string, string>) => {
         pdfBuffer,
         "invoice"
       );
+
+      if (!cloudinaryResult) {
+        throw new AppError(401, "Error uploading pdf");
+      }
 
       await Payment.findByIdAndUpdate(
         updatedPayment._id,

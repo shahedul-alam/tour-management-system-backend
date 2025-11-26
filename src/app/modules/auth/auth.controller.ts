@@ -13,23 +13,63 @@ import passport from "passport";
 
 const credentialsLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    // const loginInfo = await authServices.credentialsLogin(req.body);
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) {
-        return next(new AppError(httpStatus.UNAUTHORIZED, err));
+        return next(
+          new AppError(
+            httpStatus.INTERNAL_SERVER_ERROR,
+            "Authentication service error."
+          )
+        );
       }
 
       if (!user) {
-        return next(new AppError(httpStatus.UNAUTHORIZED, info.message));
+        return next(
+          new AppError(
+            httpStatus.UNAUTHORIZED,
+            info.message || "Invalid credentials."
+          )
+        );
       }
+
+      // stateful session
+      // req.login(user, (loginErr) => {
+      //   if (loginErr) {
+      //     return next(
+      //       new AppError(
+      //         httpStatus.INTERNAL_SERVER_ERROR,
+      //         "Error establishing session."
+      //       )
+      //     );
+      //   }
+
+      //   const userTokens = createUserToken(user);
+
+      //   setAuthCookie(res, userTokens);
+
+      //   const userObject = user.toObject();
+      //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      //   const { password, ...rest } = userObject;
+
+      //   sendResponse(res, {
+      //     success: true,
+      //     statusCode: httpStatus.OK,
+      //     message: "User logged in successfully",
+      //     data: {
+      //       accessToken: userTokens.accessToken,
+      //       refreshToken: userTokens.refreshToken,
+      //       user: rest,
+      //     },
+      //   });
+      // });
 
       const userTokens = createUserTokens(user);
 
       setAuthCookie(res, userTokens);
 
-      const { password: pass, ...rest } = user.toObject();
+      const userObject = user.toObject();
+      const { password, ...rest } = userObject;
 
       sendResponse(res, {
         success: true,
@@ -42,6 +82,80 @@ const credentialsLogin = catchAsync(
         },
       });
     })(req, res, next);
+  }
+);
+
+const googleInitiate = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const redirect = req.query.redirect || "/";
+    passport.authenticate("google", {
+      scope: ["profile", "email"],
+      prompt: "select_account",
+      state: redirect as string,
+    })(req, res, next);
+  }
+);
+
+const googleCallback = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // const redirectTo = req.query.state;
+
+    passport.authenticate(
+      "google",
+      // { session: false },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (err: any, user: any, info: any) => {
+        if (err || !user) {
+          // Redirect back to the client login page with an error flag
+          const errorMessage = err
+            ? "Server error during login."
+            : info?.message || "Authentication failed.";
+          return res.redirect(
+            `${envVars.FRONTEND_URL}/login?error=${encodeURIComponent(
+              errorMessage
+            )}`
+          );
+        }
+
+        // stateful session
+        // req.login(user, (loginErr) => {
+        //   if (loginErr) {
+        //     return next(
+        //       new AppError(
+        //         httpStatus.INTERNAL_SERVER_ERROR,
+        //         "Error establishing session."
+        //       )
+        //     );
+        //   }
+
+        //   const userTokens = createUserToken(user);
+
+        //   setAuthCookie(res, userTokens);
+
+        //   const redirectURL = `${envVars.FRONTEND_URL}${redirectTo}?accessToken=${userTokens.accessToken}`;
+
+        //   return res.redirect(redirectURL);
+        // });
+
+        const userTokens = createUserTokens(user);
+
+        setAuthCookie(res, userTokens);
+
+        const userObject = user.toObject();
+        const { password, ...rest } = userObject;
+
+        sendResponse(res, {
+          success: true,
+          statusCode: httpStatus.OK,
+          message: "User logged in successfully",
+          data: {
+            accessToken: userTokens.accessToken,
+            refreshToken: userTokens.refreshToken,
+            user: rest,
+          },
+        });
+      }
+    )(req, res, next);
   }
 );
 
@@ -159,23 +273,6 @@ const forgotPassword = catchAsync(
   }
 );
 
-const googleCallback = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const redirectTo = req.query.state;
-    const user = req.user;
-
-    if (!user) {
-      throw new AppError(httpStatus.NOT_FOUND, "User not found");
-    }
-
-    const tokenInfo = createUserTokens(user);
-
-    setAuthCookie(res, tokenInfo);
-
-    res.redirect(`${envVars.FRONTEND_URL}${redirectTo}`);
-  }
-);
-
 export const authControllers = {
   credentialsLogin,
   getNewAccessToken,
@@ -184,5 +281,6 @@ export const authControllers = {
   resetPassword,
   setPassword,
   forgotPassword,
+  googleInitiate,
   googleCallback,
 };
